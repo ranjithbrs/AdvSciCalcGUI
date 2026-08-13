@@ -1,55 +1,65 @@
-### Run the app
-```bash
-python sci_calc_gui.py
-## 📜 License
-This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
-## 👨‍💻 Author
-**Ranjith**  
-Third‑year CSBS Honors Undergraduate | Python, Java, SQL, Power BI | Data Science & AI/ML Enthusiast
-## 📸 Screenshot
-![Calculator GUI](C:\Users\B Ranjith\OneDrive\Pictures\Screenshots\Screenshot 2025-12-12 221830.png)
-# AdvSciCalcGUI
-# 🧮 Advanced Scientific Calculator GUI
+# 🧮 Advanced Scientific Calculator (AdvSciCalcGUI)
 
-![Python](https://img.shields.io/badge/Python-3.x-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
+![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)
 
-A dark‑themed **scientific calculator** built with **Python (Tkinter)**.  
-Includes arithmetic, trigonometric, logarithmic, and factorial operations with a **live history panel**.  
-Packaged as a standalone `.exe` for recruiters to run instantly.
-
----
-
-## 📖 Description
-This project demonstrates how a simple Python script (`sci_calc.py`) was evolved into a polished desktop application (`sci_calc_gui.py`) with GUI, history tracking, and professional packaging.
+A modern, dark-themed **scientific calculator application** built in Python with **Tkinter**.  
+It features an expression display screen, an interactive scientific keypad, **DEG / RAD** angle mode switching, calculation history with click-to-recall, and an isolated backend math engine with full unit test coverage.
 
 ---
 
 ## 🚀 Features
-- Arithmetic: `+`, `-`, `*`, `/`, `%`, `//`, `**`
-- Scientific: `sqrt`, `log`, `exp`, `!`
-- Trigonometric: `sin`, `cos`, `tan`, `cot`, `sec`, `cosec`
-- History panel with **Clear History**
-- Extra buttons: **Clear**, **Exit**
-- Dark theme styling
+
+- **Modern LCD Display**: Shows current mathematical expressions and live outputs directly without modal popup interruptions.
+- **Arithmetic Operations**: Addition (`+`), Subtraction (`-`), Multiplication (`*`), Division (`/`), Modulus (`%`), Floor Division (`//`), Exponentiation (`^`).
+- **Scientific Functions**: Square Root (`sqrt`), Logarithm (`log`), Natural Log (`ln`), Exponential (`exp`), Factorial (`!`), Constants ($\pi$, $e$).
+- **Trigonometry**: Sine (`sin`), Cosine (`cos`), Tangent (`tan`), Secant (`sec`), Cosecant (`cosec`), Cotangent (`cot`), plus inverse functions (`asin`, `acos`, `atan`).
+- **Angle Modes**: Easy toggle between **DEG** (Degrees) and **RAD** (Radians) for trigonometric calculations.
+- **History Panel**: Displays recent calculations with double-click recall functionality and a one-click **Clear History** button.
+- **Keyboard Shortcuts**: Supports keyboard numeric input, `Enter` to evaluate, `Backspace` to delete, and `Escape` for All Clear (`AC`).
+- **CLI & Module Architecture**: `sci_calc.py` serves as both an interactive CLI and an importable math backend.
 
 ---
 
-## 🖥️ Executables
-- **AdvCalcGUI.exe** → Full GUI calculator with dark theme, history panel, and advanced functions.  
-- **SciCalc.exe** → Lightweight CLI version showing the core scientific operations.  
+## 📁 Repository Structure
 
-👉 Recruiters: Run `AdvCalcGUI.exe` for the polished desktop experience.
+```
+AdvSciCalcGUI/
+├── sci_calc.py        # Core scientific math library & interactive CLI
+├── sci_calc_gui.py    # Tkinter graphical scientific calculator
+├── test_sci_calc.py   # Unit test suite
+├── calculator.ico     # Window application icon
+└── README.md          # Project documentation
+```
 
 ---
 
-## 🚀 Getting Started
+## 💻 Getting Started
 
 ### Prerequisites
-- Python 3.x installed
-- Tkinter (comes pre‑installed with Python)
+- Python 3.8+ installed (Tkinter comes pre-installed with standard Python distributions).
 
-### Run the app
+### Running the GUI Application
 ```bash
 python sci_calc_gui.py
+```
+
+### Running the Interactive CLI
+```bash
+python sci_calc.py
+```
+
+### Running Automated Tests
+```bash
+python -m unittest test_sci_calc.py
+```
+
+---
+
+## 📜 License
+This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 Author
+**Ranjith**  
+Computer Science & Business Systems Undergraduate | Python, Java, SQL, AI/ML Enthusiast
