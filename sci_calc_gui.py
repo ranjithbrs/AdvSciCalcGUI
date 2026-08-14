@@ -1,5 +1,6 @@
 import math
 import os
+import re
 import tkinter as tk
 from tkinter import messagebox, ttk
 import sci_calc
@@ -8,7 +9,7 @@ class ScientificCalculatorGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Advanced Scientific Calculator")
-        self.root.geometry("640 x 520")
+        self.root.geometry("640x520")
         self.root.minsize(580, 480)
         self.root.configure(bg="#1e1e2e")
 
@@ -104,7 +105,7 @@ class ScientificCalculatorGUI:
             [("asin", lambda: self.add_func("asin"), self.btn_accent), ("acos", lambda: self.add_func("acos"), self.btn_accent), ("atan", lambda: self.add_func("atan"), self.btn_accent), ("sec", lambda: self.add_func("sec"), self.btn_accent), ("cosec", lambda: self.add_func("cosec"), self.btn_accent), ("cot", lambda: self.add_func("cot"), self.btn_accent)],
             [("log", lambda: self.add_func("log"), self.btn_accent), ("ln", lambda: self.add_func("ln"), self.btn_accent), ("sqrt", lambda: self.add_func("sqrt"), self.btn_accent), ("exp", lambda: self.add_func("exp"), self.btn_accent), ("!", lambda: self.add_symbol("!"), self.btn_accent), ("⌫", self.backspace, self.btn_clear)],
             [("(", lambda: self.add_symbol("("), self.btn_accent), (")", lambda: self.add_symbol(")"), self.btn_accent), ("^", lambda: self.add_symbol("**"), self.btn_accent), ("%", lambda: self.add_symbol("%"), self.btn_accent), ("//", lambda: self.add_symbol("//"), self.btn_accent), ("/", lambda: self.add_symbol("/"), self.btn_op)],
-            [("7", lambda: self.add_symbol("7"), self.btn_bg), ("8", lambda: self.add_symbol("8"), self.btn_bg), ("9", lambda: self.add_symbol("9"), self.btn_bg), ("π", lambda: self.add_symbol("math.pi"), self.btn_accent), ("e", lambda: self.add_symbol("math.e"), self.btn_accent), ("*", lambda: self.add_symbol("*"), self.btn_op)],
+            [("7", lambda: self.add_symbol("7"), self.btn_bg), ("8", lambda: self.add_symbol("8"), self.btn_bg), ("9", lambda: self.add_symbol("9"), self.btn_bg), ("π", lambda: self.add_symbol("pi"), self.btn_accent), ("e", lambda: self.add_symbol("e"), self.btn_accent), ("*", lambda: self.add_symbol("*"), self.btn_op)],
             [("4", lambda: self.add_symbol("4"), self.btn_bg), ("5", lambda: self.add_symbol("5"), self.btn_bg), ("6", lambda: self.add_symbol("6"), self.btn_bg), ("Ans", self.add_ans, self.btn_accent), ("x²", lambda: self.add_symbol("**2"), self.btn_accent), ("-", lambda: self.add_symbol("-"), self.btn_op)],
             [("1", lambda: self.add_symbol("1"), self.btn_bg), ("2", lambda: self.add_symbol("2"), self.btn_bg), ("3", lambda: self.add_symbol("3"), self.btn_bg), (".", lambda: self.add_symbol("."), self.btn_bg), ("0", lambda: self.add_symbol("0"), self.btn_bg), ("+", lambda: self.add_symbol("+"), self.btn_op)],
         ]
@@ -140,18 +141,17 @@ class ScientificCalculatorGUI:
 
     def toggle_angle_mode(self):
         if self.angle_mode == "deg":
-            self.angle_mode = "rad"
-            if self.mode_btn:
-                self.mode_btn.configure(text="RAD", bg="#ffb86c")
+            self.set_angle_mode("rad")
         else:
-            self.angle_mode = "deg"
-            if self.mode_btn:
-                self.mode_btn.configure(text="DEG", bg=self.btn_accent)
+            self.set_angle_mode("deg")
 
     def set_angle_mode(self, mode):
         self.angle_mode = mode
         if self.mode_btn:
-            self.mode_btn.configure(text="RAD" if mode == "rad" else "DEG", bg="#ffb86c" if mode == "rad" else self.btn_accent)
+            self.mode_btn.configure(
+                text="RAD" if mode == "rad" else "DEG",
+                bg="#ffb86c" if mode == "rad" else self.btn_accent
+            )
 
     def get_display_text(self):
         return self.display.get()
@@ -162,14 +162,14 @@ class ScientificCalculatorGUI:
 
     def add_symbol(self, symbol):
         current = self.get_display_text()
-        if current in ["0", "Error: Division by zero.", "Error: Invalid input.", "Error: Undefined.", "Error: Overflow."]:
+        if current in ["0", "Error: Division by zero.", "Error: Invalid input.", "Error: Undefined.", "Error: Overflow.", "Error: Complex result."]:
             self.set_display_text(symbol)
         else:
             self.display.insert(tk.END, symbol)
 
     def add_func(self, func_name):
         current = self.get_display_text()
-        if current in ["0", "Error: Division by zero.", "Error: Invalid input.", "Error: Undefined.", "Error: Overflow."]:
+        if current in ["0", "Error: Division by zero.", "Error: Invalid input.", "Error: Undefined.", "Error: Overflow.", "Error: Complex result."]:
             self.set_display_text(f"{func_name}(")
         else:
             self.display.insert(tk.END, f"{func_name}(")
@@ -180,7 +180,7 @@ class ScientificCalculatorGUI:
 
     def backspace(self):
         current = self.get_display_text()
-        if len(current) > 1 and current not in ["Error: Division by zero.", "Error: Invalid input.", "Error: Undefined."]:
+        if len(current) > 1 and not current.startswith("Error:"):
             self.set_display_text(current[:-1])
         else:
             self.set_display_text("0")
@@ -207,9 +207,11 @@ class ScientificCalculatorGUI:
 
         self.expr_label.configure(text=f"{expr} =")
         try:
-            # Context for evaluation using sci_calc module
+            # Environment for expression evaluation using sci_calc module
             eval_env = {
                 "math": math,
+                "pi": math.pi,
+                "e": math.e,
                 "sin": lambda x: sci_calc.sine(x, self.angle_mode),
                 "cos": lambda x: sci_calc.cosine(x, self.angle_mode),
                 "tan": lambda x: sci_calc.tangent(x, self.angle_mode),
@@ -226,29 +228,34 @@ class ScientificCalculatorGUI:
                 "fact": sci_calc.factorial,
             }
             
-            # Handle trailing factorial !
-            eval_expr = expr.replace("!", ")").replace("fact(", "sci_calc.factorial(") if "!" in expr else expr
-            # Clean display math terms
-            eval_expr = eval_expr.replace("^", "**")
+            eval_expr = expr.replace("^", "**")
+            
+            # Replace trailing factorial ! syntax like 5! or (3+2)! with fact(5) or fact(3+2)
+            eval_expr = re.sub(r'(\d+(?:\.\d+)?|\([^)]+\))!', r'fact(\1)', eval_expr)
 
             result = eval(eval_expr, {"__builtins__": None, "sci_calc": sci_calc}, eval_env)
             
-            if isinstance(result, float):
-                result = round(result, 6)
-                if result.is_integer():
-                    result = int(result)
+            if isinstance(result, (float, int)):
+                if isinstance(result, float):
+                    result = round(result, 6)
+                    if result.is_integer():
+                        result = int(result)
+                res_str = str(result)
+            else:
+                res_str = str(result)
 
-            res_str = str(result)
             self.set_display_text(res_str)
-            self.last_ans = res_str
-            self.history_listbox.insert(tk.END, f"{expr} = {res_str}")
-            self.history_listbox.yview(tk.END)
+            if not res_str.startswith("Error:"):
+                self.last_ans = res_str
+                self.history_listbox.insert(tk.END, f"{expr} = {res_str}")
+                self.history_listbox.yview(tk.END)
+
         except ZeroDivisionError:
             self.set_display_text("Error: Division by zero.")
-        except Exception as e:
+        except Exception:
             self.set_display_text("Error: Invalid input.")
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = ScientificCalculatorGUI(root)
-    root.mainloop()
+    root.mainloop()

@@ -1,5 +1,6 @@
 import unittest
 import math
+import re
 import sci_calc
 
 class TestSciCalc(unittest.TestCase):
@@ -42,11 +43,22 @@ class TestSciCalc(unittest.TestCase):
         self.assertEqual(sci_calc.cosec(90, mode="deg"), 1)
         self.assertEqual(sci_calc.cot(45, mode="deg"), 1)
 
+    def test_trigonometry_rad(self):
+        self.assertEqual(sci_calc.sine(math.pi / 2, mode="rad"), 1)
+        self.assertEqual(sci_calc.cosine(0, mode="rad"), 1)
+        self.assertEqual(sci_calc.tangent(math.pi / 4, mode="rad"), 1)
+
     def test_inverse_trig(self):
         self.assertEqual(sci_calc.arcsin(1, mode="deg"), 90)
         self.assertEqual(sci_calc.arccos(1, mode="deg"), 0)
         self.assertEqual(sci_calc.arctan(1, mode="deg"), 45)
         self.assertEqual(sci_calc.arcsin(2, mode="deg"), "Error: Invalid input.")
+
+    def test_factorial_regex_replacement(self):
+        expr1 = re.sub(r'(\d+(?:\.\d+)?|\([^)]+\))!', r'fact(\1)', "5!")
+        self.assertEqual(expr1, "fact(5)")
+        expr2 = re.sub(r'(\d+(?:\.\d+)?|\([^)]+\))!', r'fact(\1)', "(3+2)!")
+        self.assertEqual(expr2, "fact((3+2))")
 
 if __name__ == "__main__":
     unittest.main()
