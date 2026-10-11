@@ -7,11 +7,25 @@
 [![Tests: Passing](https://img.shields.io/badge/Unit%20Tests-100%25%20Passing-success?style=for-the-badge&logo=checkmarx&logoColor=white)](test_sci_calc.py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-> A modern, dark-themed graphical scientific calculator desktop application built with Python and Tkinter. Features an expression evaluation display, interactive scientific keypad, real-time calculation history with double-click recall, DEG/RAD angle switching, and a decoupled, fully unit-tested mathematical computation engine.
+> 🌟 **A sleek, modern desktop scientific calculator designed for high school & college math — with history recall and dark mode!**
+
+---
+
+## 💡 What is this Project in 30 Seconds? (In Plain English)
+
+Have you ever tried using the default computer calculator, only to find that it doesn't remember your calculation history, gets confused when you type complex formulas with parentheses, or looks boring?
+
+**AdvSciCalcGUI** is a **sleek, dark-mode desktop scientific calculator** built for everyday students and scientists:
+- 🎨 **Beautiful Dark Theme:** Eye-friendly contrast with color-coded operation buttons.
+- 📐 **Full Scientific Power:** Calculates everything from simple addition to trigonometry ($\sin, \cos, \tan$), roots, logarithms, powers, and factorials ($5!$).
+- 📜 **Interactive History Sidebar:** Remembers all your past calculations. Double-click any past answer to instantly bring it back!
+- ⌨️ **Keyboard & Mouse Friendly:** Type naturally on your keyboard with `Enter` and `Backspace`, or click the buttons on screen.
+- 📦 **No Installation Hassle:** Can be bundled as a standalone `.exe` that opens with a single double-click on Windows!
 
 ---
 
 ## 📑 Table of Contents
+- [What is this Project?](#-what-is-this-project-in-30-seconds-in-plain-english)
 - [Architecture & Data Flow](#-architecture--data-flow)
 - [Key Features](#-key-features)
 - [Mathematical Functionalities](#-mathematical-functionalities)
