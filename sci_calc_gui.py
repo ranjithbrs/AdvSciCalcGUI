@@ -29,6 +29,9 @@ class ScientificCalculatorGUI:
         self.create_layout()
         self.bind_events()
 
+        # Set initial keyboard focus to root window for instant hotkeys
+        self.root.focus_set()
+
     def create_styles(self):
         self.bg_color = "#1e1e2e"
         self.panel_bg = "#282a36"
@@ -62,7 +65,7 @@ class ScientificCalculatorGUI:
         # Main Entry Display
         self.display = tk.Entry(
             display_frame, font=("Consolas", 22, "bold"), bg=self.panel_bg, fg="#f8f8f2",
-            bd=0, justify="right", insertbackground="#f8f8f2"
+            bd=0, justify="right", insertbackground="#f8f8f2", takefocus=True
         )
         self.display.grid(row=1, column=0, padx=10, pady=(0, 6), sticky="ew")
         self.display.insert(0, "0")
@@ -84,14 +87,15 @@ class ScientificCalculatorGUI:
         tk.Label(hist_header, text="History", bg=self.panel_bg, fg="#f8f8f2", font=("Arial", 11, "bold")).grid(row=0, column=0, sticky="w")
         btn_clr_hist = tk.Button(
             hist_header, text="Clear", command=self.clear_history, bg=self.btn_clear, fg="#ffffff",
-            font=("Arial", 9, "bold"), bd=0, padx=6, pady=2, cursor="hand2"
+            font=("Arial", 9, "bold"), bd=0, padx=6, pady=2, cursor="hand2", takefocus=True
         )
         btn_clr_hist.grid(row=0, column=1, sticky="e")
 
         # History Listbox + Scrollbar
         self.history_listbox = tk.Listbox(
             history_frame, bg="#21222c", fg="#f8f8f2", selectbackground="#44475a",
-            selectforeground="#8be9fd", font=("Consolas", 10), bd=0, highlightthickness=0
+            selectforeground="#8be9fd", font=("Consolas", 10), bd=0, highlightthickness=0,
+            takefocus=True
         )
         scrollbar = tk.Scrollbar(history_frame, orient="vertical", command=self.history_listbox.yview)
         self.history_listbox.configure(yscrollcommand=scrollbar.set)
@@ -104,9 +108,9 @@ class ScientificCalculatorGUI:
             [("DEG", self.toggle_angle_mode, self.btn_accent), ("rad", lambda: self.set_angle_mode("rad"), self.btn_accent), ("sin", lambda: self.add_func("sin"), self.btn_accent), ("cos", lambda: self.add_func("cos"), self.btn_accent), ("tan", lambda: self.add_func("tan"), self.btn_accent), ("AC", self.all_clear, self.btn_clear)],
             [("asin", lambda: self.add_func("asin"), self.btn_accent), ("acos", lambda: self.add_func("acos"), self.btn_accent), ("atan", lambda: self.add_func("atan"), self.btn_accent), ("sec", lambda: self.add_func("sec"), self.btn_accent), ("cosec", lambda: self.add_func("cosec"), self.btn_accent), ("cot", lambda: self.add_func("cot"), self.btn_accent)],
             [("log", lambda: self.add_func("log"), self.btn_accent), ("ln", lambda: self.add_func("ln"), self.btn_accent), ("sqrt", lambda: self.add_func("sqrt"), self.btn_accent), ("exp", lambda: self.add_func("exp"), self.btn_accent), ("!", lambda: self.add_symbol("!"), self.btn_accent), ("⌫", self.backspace, self.btn_clear)],
-            [("(", lambda: self.add_symbol("("), self.btn_accent), (")", lambda: self.add_symbol(")"), self.btn_accent), ("^", lambda: self.add_symbol("**"), self.btn_accent), ("%", lambda: self.add_symbol("%"), self.btn_accent), ("//", lambda: self.add_symbol("//"), self.btn_accent), ("/", lambda: self.add_symbol("/"), self.btn_op)],
+            [("(", lambda: self.add_symbol("("), self.btn_accent), (")", lambda: self.add_symbol(")"), self.btn_accent), ("^", lambda: self.add_symbol("^"), self.btn_accent), ("%", lambda: self.add_symbol("%"), self.btn_accent), ("//", lambda: self.add_symbol("//"), self.btn_accent), ("/", lambda: self.add_symbol("/"), self.btn_op)],
             [("7", lambda: self.add_symbol("7"), self.btn_bg), ("8", lambda: self.add_symbol("8"), self.btn_bg), ("9", lambda: self.add_symbol("9"), self.btn_bg), ("π", lambda: self.add_symbol("pi"), self.btn_accent), ("e", lambda: self.add_symbol("e"), self.btn_accent), ("*", lambda: self.add_symbol("*"), self.btn_op)],
-            [("4", lambda: self.add_symbol("4"), self.btn_bg), ("5", lambda: self.add_symbol("5"), self.btn_bg), ("6", lambda: self.add_symbol("6"), self.btn_bg), ("Ans", self.add_ans, self.btn_accent), ("x²", lambda: self.add_symbol("**2"), self.btn_accent), ("-", lambda: self.add_symbol("-"), self.btn_op)],
+            [("4", lambda: self.add_symbol("4"), self.btn_bg), ("5", lambda: self.add_symbol("5"), self.btn_bg), ("6", lambda: self.add_symbol("6"), self.btn_bg), ("Ans", self.add_ans, self.btn_accent), ("x²", lambda: self.add_symbol("^2"), self.btn_accent), ("-", lambda: self.add_symbol("-"), self.btn_op)],
             [("1", lambda: self.add_symbol("1"), self.btn_bg), ("2", lambda: self.add_symbol("2"), self.btn_bg), ("3", lambda: self.add_symbol("3"), self.btn_bg), (".", lambda: self.add_symbol("."), self.btn_bg), ("0", lambda: self.add_symbol("0"), self.btn_bg), ("+", lambda: self.add_symbol("+"), self.btn_op)],
         ]
 
@@ -121,7 +125,7 @@ class ScientificCalculatorGUI:
                 btn = tk.Button(
                     keypad_frame, text=text, command=cmd, bg=color, fg=self.btn_fg,
                     font=("Arial", 10, "bold"), bd=0, relief="flat", cursor="hand2",
-                    activebackground="#6272a4", activeforeground="#ffffff"
+                    activebackground="#6272a4", activeforeground="#ffffff", takefocus=True
                 )
                 btn.grid(row=r_idx, column=c_idx, padx=2, pady=2, sticky="nsew")
                 if text == "DEG":
@@ -130,14 +134,43 @@ class ScientificCalculatorGUI:
         # Equals button spanning bottom row
         eq_btn = tk.Button(
             keypad_frame, text="=", command=self.evaluate, bg=self.btn_eq, fg=self.btn_eq_fg,
-            font=("Arial", 12, "bold"), bd=0, cursor="hand2", activebackground="#8be9fd"
+            font=("Arial", 12, "bold"), bd=0, cursor="hand2", activebackground="#8be9fd",
+            takefocus=True
         )
         eq_btn.grid(row=len(buttons), column=0, columnspan=6, padx=2, pady=2, sticky="nsew")
 
     def bind_events(self):
+        """Binds keyboard shortcuts and handles direct typing smoothly."""
         self.root.bind("<Return>", lambda e: self.evaluate())
+        self.root.bind("<KP_Enter>", lambda e: self.evaluate())
         self.root.bind("<BackSpace>", lambda e: self.backspace())
         self.root.bind("<Escape>", lambda e: self.all_clear())
+        self.root.bind("<Key>", self.handle_key_press)
+
+    def handle_key_press(self, event):
+        """Global keyboard handler for digits, operators, shortcuts, and navigation."""
+        char = event.char
+        keysym = event.keysym
+
+        # Ignore if typing directly inside an active Entry to prevent double input
+        if event.widget == self.display and keysym not in ("Return", "KP_Enter", "Escape"):
+            return
+
+        if char in "0123456789.":
+            self.add_symbol(char)
+            return "break"
+        elif char in "+-*/%()^!":
+            self.add_symbol(char)
+            return "break"
+        elif char == "=":
+            self.evaluate()
+            return "break"
+        elif char.lower() == "c":
+            self.all_clear()
+            return "break"
+        elif char.lower() == "d":
+            self.toggle_angle_mode()
+            return "break"
 
     def toggle_angle_mode(self):
         if self.angle_mode == "deg":
@@ -163,7 +196,12 @@ class ScientificCalculatorGUI:
     def add_symbol(self, symbol):
         current = self.get_display_text()
         if current in ["0", "Error: Division by zero.", "Error: Invalid input.", "Error: Undefined.", "Error: Overflow.", "Error: Complex result."]:
-            self.set_display_text(symbol)
+            if symbol == ".":
+                self.set_display_text("0.")
+            elif symbol in "+-*/%^":
+                self.set_display_text(f"0{symbol}")
+            else:
+                self.set_display_text(symbol)
         else:
             self.display.insert(tk.END, symbol)
 

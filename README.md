@@ -24,8 +24,15 @@ Have you ever tried using the default computer calculator, only to find that it 
 
 ---
 
+## 📸 Application Screenshot
+
+![Advanced Scientific Calculator GUI Interface](screenshot.png)
+
+---
+
 ## 📑 Table of Contents
 - [What is this Project?](#-what-is-this-project-in-30-seconds-in-plain-english)
+- [Application Screenshot](#-application-screenshot)
 - [Architecture & Data Flow](#-architecture--data-flow)
 - [Key Features](#-key-features)
 - [Mathematical Functionalities](#-mathematical-functionalities)
@@ -123,6 +130,10 @@ The desktop GUI is built for speed and supports both mouse-driven clicking and p
 | <kbd>0</kbd> – <kbd>9</kbd> | **Digit Input** | Direct insertion of numeric operands |
 | <kbd>+</kbd>, <kbd>-</kbd>, <kbd>*</kbd>, <kbd>/</kbd>, <kbd>%</kbd> | **Operators** | Direct arithmetic operator entry |
 | <kbd>(</kbd> and <kbd>)</kbd> | **Parentheses** | Enforces grouping and order of operations |
+| <kbd>^</kbd> / <kbd>!</kbd> | **Power / Factorial** | Exponentiation and factorial operators |
+| <kbd>=</kbd> | **Evaluate** | Alternative key to calculate result |
+| <kbd>c</kbd> / <kbd>C</kbd> | **Clear Display** | Quick hotkey to reset display to `0` |
+| <kbd>d</kbd> / <kbd>D</kbd> | **Toggle Angle Mode** | Toggles DEG / RAD angle mode instantly |
 
 ---
 
@@ -134,6 +145,7 @@ AdvSciCalcGUI/
 ├── sci_calc_gui.py        # Graphical user interface application (Tkinter)
 ├── test_sci_calc.py       # Automated unit test suite (Python unittest)
 ├── calculator.ico         # Custom high-resolution Windows application icon
+├── screenshot.png         # High-resolution application preview screenshot
 ├── .github/               # GitHub workflows and project templates
 └── README.md              # Project documentation
 ```

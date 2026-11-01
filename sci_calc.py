@@ -101,10 +101,11 @@ def cosec(angle: float, mode: str = "deg") -> Union[float, str]:
 
 def cot(angle: float, mode: str = "deg") -> Union[float, str]:
     """Returns cotangent of angle in degrees or radians."""
-    tan_value = tangent(angle, mode)
-    if tan_value == 0 or tan_value == "Error: Undefined." or isinstance(tan_value, str):
+    sin_val = sine(angle, mode)
+    if sin_val == 0 or abs(sin_val) < 1e-12:
         return "Error: Undefined."
-    return round(1 / tan_value, 6)
+    cos_val = cosine(angle, mode)
+    return round(cos_val / sin_val, 6)
 
 def arcsin(val: float, mode: str = "deg") -> Union[float, str]:
     """Returns arcsine of value in degrees or radians."""
