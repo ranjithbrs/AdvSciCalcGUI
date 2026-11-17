@@ -5,6 +5,39 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 import sci_calc
 
+def transform_factorials(expr: str) -> str:
+    """Transforms arbitrary factorial expressions (including nested parentheses) into fact(...) calls."""
+    while "!" in expr:
+        idx = expr.index("!")
+        if idx > 0 and expr[idx - 1] == ")":
+            depth = 1
+            j = idx - 2
+            while j >= 0 and depth > 0:
+                if expr[j] == ")":
+                    depth += 1
+                elif expr[j] == "(":
+                    depth -= 1
+                j -= 1
+            inner = expr[j + 1 : idx]
+            expr = expr[: j + 1] + f"fact({inner})" + expr[idx + 1 :]
+        else:
+            m = re.search(r'(\d+(?:\.\d+)?)\s*!$', expr[: idx + 1])
+            if m:
+                num_str = m.group(1)
+                start = m.start(1)
+                expr = expr[:start] + f"fact({num_str})" + expr[idx + 1 :]
+            else:
+                break
+    return expr
+
+def add_implicit_multiplication(expr: str) -> str:
+    """Inserts multiplication operators for expressions like 2(5), 2pi, 3sqrt(9), and (2+3)(4+5)."""
+    # Number followed by parenthesis, constant, or function name: 2( -> 2*(, 2pi -> 2*pi
+    expr = re.sub(r'(\d)\s*([a-zA-Z(])', r'\1*\2', expr)
+    # Closing parenthesis followed by digit, opening parenthesis, constant, or function: )2 -> )*2, )( -> )*(
+    expr = re.sub(r'\)\s*([0-9a-zA-Z(])', r')*\1', expr)
+    return expr
+
 class ScientificCalculatorGUI:
     def __init__(self, root):
         self.root = root
@@ -24,6 +57,7 @@ class ScientificCalculatorGUI:
         self.angle_mode = "deg"  # "deg" or "rad"
         self.last_ans = ""
         self.expression = ""
+        self.just_evaluated = False  # Flags when display holds fresh result for overwrite/chaining
 
         self.create_styles()
         self.create_layout()
@@ -103,9 +137,9 @@ class ScientificCalculatorGUI:
         scrollbar.grid(row=1, column=1, sticky="ns", padx=(0, 5), pady=5)
         self.history_listbox.bind("<Double-Button-1>", self.recall_history)
 
-        # Build Keypad Buttons Grid
+        # Build Keypad Buttons Grid (Replaced duplicate 'rad' button with 'abs')
         buttons = [
-            [("DEG", self.toggle_angle_mode, self.btn_accent), ("rad", lambda: self.set_angle_mode("rad"), self.btn_accent), ("sin", lambda: self.add_func("sin"), self.btn_accent), ("cos", lambda: self.add_func("cos"), self.btn_accent), ("tan", lambda: self.add_func("tan"), self.btn_accent), ("AC", self.all_clear, self.btn_clear)],
+            [("DEG", self.toggle_angle_mode, self.btn_accent), ("abs", lambda: self.add_func("abs"), self.btn_accent), ("sin", lambda: self.add_func("sin"), self.btn_accent), ("cos", lambda: self.add_func("cos"), self.btn_accent), ("tan", lambda: self.add_func("tan"), self.btn_accent), ("AC", self.all_clear, self.btn_clear)],
             [("asin", lambda: self.add_func("asin"), self.btn_accent), ("acos", lambda: self.add_func("acos"), self.btn_accent), ("atan", lambda: self.add_func("atan"), self.btn_accent), ("sec", lambda: self.add_func("sec"), self.btn_accent), ("cosec", lambda: self.add_func("cosec"), self.btn_accent), ("cot", lambda: self.add_func("cot"), self.btn_accent)],
             [("log", lambda: self.add_func("log"), self.btn_accent), ("ln", lambda: self.add_func("ln"), self.btn_accent), ("sqrt", lambda: self.add_func("sqrt"), self.btn_accent), ("exp", lambda: self.add_func("exp"), self.btn_accent), ("!", lambda: self.add_symbol("!"), self.btn_accent), ("⌫", self.backspace, self.btn_clear)],
             [("(", lambda: self.add_symbol("("), self.btn_accent), (")", lambda: self.add_symbol(")"), self.btn_accent), ("^", lambda: self.add_symbol("^"), self.btn_accent), ("%", lambda: self.add_symbol("%"), self.btn_accent), ("//", lambda: self.add_symbol("//"), self.btn_accent), ("/", lambda: self.add_symbol("/"), self.btn_op)],
@@ -152,8 +186,22 @@ class ScientificCalculatorGUI:
         char = event.char
         keysym = event.keysym
 
-        # Ignore if typing directly inside an active Entry to prevent double input
-        if event.widget == self.display and keysym not in ("Return", "KP_Enter", "Escape"):
+        # If user types directly in Entry, sanitize leading zero / errors
+        if event.widget == self.display:
+            if keysym in ("Return", "KP_Enter"):
+                self.evaluate()
+                return "break"
+            if keysym == "Escape":
+                self.all_clear()
+                return "break"
+            cur = self.get_display_text()
+            if cur in ["0", "Error: Division by zero.", "Error: Invalid input.", "Error: Undefined.", "Error: Overflow.", "Error: Complex result."]:
+                if char in "0123456789":
+                    self.set_display_text(char)
+                    return "break"
+                elif char in "+-*/%^":
+                    self.set_display_text(f"0{char}")
+                    return "break"
             return
 
         if char in "0123456789.":
@@ -195,10 +243,26 @@ class ScientificCalculatorGUI:
 
     def add_symbol(self, symbol):
         current = self.get_display_text()
+
+        # If previous operation completed and user types a digit or '.', start fresh
+        if self.just_evaluated:
+            self.just_evaluated = False
+            if symbol.startswith(("+", "-", "*", "/", "%", "^")):
+                # Chain operator directly onto existing result
+                pass
+            else:
+                # Fresh new expression
+                if symbol == ".":
+                    self.set_display_text("0.")
+                else:
+                    self.set_display_text(symbol)
+                return
+
+        # Replace initial 0 or previous error display cleanly
         if current in ["0", "Error: Division by zero.", "Error: Invalid input.", "Error: Undefined.", "Error: Overflow.", "Error: Complex result."]:
             if symbol == ".":
                 self.set_display_text("0.")
-            elif symbol in "+-*/%^":
+            elif symbol.startswith(("+", "-", "*", "/", "%", "^")):
                 self.set_display_text(f"0{symbol}")
             else:
                 self.set_display_text(symbol)
@@ -207,6 +271,12 @@ class ScientificCalculatorGUI:
 
     def add_func(self, func_name):
         current = self.get_display_text()
+
+        if self.just_evaluated:
+            self.just_evaluated = False
+            self.set_display_text(f"{func_name}(")
+            return
+
         if current in ["0", "Error: Division by zero.", "Error: Invalid input.", "Error: Undefined.", "Error: Overflow.", "Error: Complex result."]:
             self.set_display_text(f"{func_name}(")
         else:
@@ -217,6 +287,7 @@ class ScientificCalculatorGUI:
             self.add_symbol(str(self.last_ans))
 
     def backspace(self):
+        self.just_evaluated = False
         current = self.get_display_text()
         if len(current) > 1 and not current.startswith("Error:"):
             self.set_display_text(current[:-1])
@@ -224,6 +295,7 @@ class ScientificCalculatorGUI:
             self.set_display_text("0")
 
     def all_clear(self):
+        self.just_evaluated = False
         self.set_display_text("0")
         self.expr_label.configure(text="")
 
@@ -237,6 +309,7 @@ class ScientificCalculatorGUI:
             if "=" in item:
                 val = item.split("=")[-1].strip()
                 self.set_display_text(val)
+                self.just_evaluated = True
 
     def evaluate(self):
         expr = self.get_display_text()
@@ -250,6 +323,7 @@ class ScientificCalculatorGUI:
                 "math": math,
                 "pi": math.pi,
                 "e": math.e,
+                "abs": abs,
                 "sin": lambda x: sci_calc.sine(x, self.angle_mode),
                 "cos": lambda x: sci_calc.cosine(x, self.angle_mode),
                 "tan": lambda x: sci_calc.tangent(x, self.angle_mode),
@@ -266,10 +340,14 @@ class ScientificCalculatorGUI:
                 "fact": sci_calc.factorial,
             }
             
+            # 1. Transform ^ to Python exponentiation **
             eval_expr = expr.replace("^", "**")
             
-            # Replace trailing factorial ! syntax like 5! or (3+2)! with fact(5) or fact(3+2)
-            eval_expr = re.sub(r'(\d+(?:\.\d+)?|\([^)]+\))!', r'fact(\1)', eval_expr)
+            # 2. Add implicit multiplication: 2pi -> 2*pi, 2(5) -> 2*(5), (2+3)(4+5) -> (2+3)*(4+5)
+            eval_expr = add_implicit_multiplication(eval_expr)
+
+            # 3. Transform factorial notation to fact(...) including nested parentheses and numbers
+            eval_expr = transform_factorials(eval_expr)
 
             result = eval(eval_expr, {"__builtins__": None, "sci_calc": sci_calc}, eval_env)
             
@@ -285,13 +363,18 @@ class ScientificCalculatorGUI:
             self.set_display_text(res_str)
             if not res_str.startswith("Error:"):
                 self.last_ans = res_str
+                self.just_evaluated = True
                 self.history_listbox.insert(tk.END, f"{expr} = {res_str}")
                 self.history_listbox.yview(tk.END)
+            else:
+                self.just_evaluated = False
 
         except ZeroDivisionError:
             self.set_display_text("Error: Division by zero.")
+            self.just_evaluated = False
         except Exception:
             self.set_display_text("Error: Invalid input.")
+            self.just_evaluated = False
 
 if __name__ == "__main__":
     root = tk.Tk()

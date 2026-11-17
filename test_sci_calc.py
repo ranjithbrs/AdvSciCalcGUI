@@ -3,7 +3,7 @@ import math
 import re
 import tkinter as tk
 import sci_calc
-from sci_calc_gui import ScientificCalculatorGUI
+from sci_calc_gui import ScientificCalculatorGUI, transform_factorials, add_implicit_multiplication
 
 class TestMathematicalOperations(unittest.TestCase):
     """Tests all scientific, arithmetic, and domain operations."""
@@ -21,9 +21,14 @@ class TestMathematicalOperations(unittest.TestCase):
         self.assertEqual(sci_calc.division(5, 0), "Error: Division by zero.")
         self.assertEqual(sci_calc.modulus(5, 0), "Error: Division by zero.")
         self.assertEqual(sci_calc.floor_division(5, 0), "Error: Division by zero.")
+        # Zero to negative power is division by zero
+        self.assertEqual(sci_calc.power(0, -1), "Error: Division by zero.")
+        self.assertEqual(sci_calc.power(0, -5), "Error: Division by zero.")
 
     def test_powers_and_roots(self):
         self.assertEqual(sci_calc.power(2, 3), 8)
+        self.assertEqual(sci_calc.power(5, 0), 1)
+        self.assertEqual(sci_calc.power(0, 5), 0)
         self.assertEqual(sci_calc.square_root(16), 4)
         self.assertEqual(sci_calc.square_root(0), 0)
         self.assertEqual(sci_calc.square_root(-9), "Error: Negative value.")
@@ -48,9 +53,10 @@ class TestMathematicalOperations(unittest.TestCase):
         self.assertEqual(sci_calc.factorial(5), 120)
         self.assertEqual(sci_calc.factorial(0), 1)
         self.assertEqual(sci_calc.factorial(1), 1)
-        # Invalid factorial inputs
+        # Invalid factorial inputs and limits
         self.assertEqual(sci_calc.factorial(-3), "Error: Invalid input.")
         self.assertEqual(sci_calc.factorial(3.5), "Error: Invalid input.")
+        self.assertEqual(sci_calc.factorial(5000), "Error: Overflow.")
 
     def test_trigonometry_deg(self):
         self.assertEqual(sci_calc.sine(0, mode="deg"), 0)
@@ -66,6 +72,7 @@ class TestMathematicalOperations(unittest.TestCase):
         self.assertEqual(sci_calc.cosec(0, mode="deg"), "Error: Undefined.")
         self.assertEqual(sci_calc.cot(45, mode="deg"), 1)
         self.assertEqual(sci_calc.cot(0, mode="deg"), "Error: Undefined.")
+        self.assertEqual(sci_calc.cot(90, mode="deg"), 0)
 
     def test_trigonometry_rad(self):
         self.assertEqual(sci_calc.sine(math.pi / 2, mode="rad"), 1)
@@ -88,11 +95,17 @@ class TestMathematicalOperations(unittest.TestCase):
         self.assertEqual(sci_calc.exponential(1), round(math.e, 6))
         self.assertEqual(sci_calc.exponential(1000), "Error: Overflow.")
 
-    def test_factorial_regex_replacement(self):
-        expr1 = re.sub(r'(\d+(?:\.\d+)?|\([^)]+\))!', r'fact(\1)', "5!")
-        self.assertEqual(expr1, "fact(5)")
-        expr2 = re.sub(r'(\d+(?:\.\d+)?|\([^)]+\))!', r'fact(\1)', "(3+2)!")
-        self.assertEqual(expr2, "fact((3+2))")
+    def test_factorial_parsing_and_nested_parens(self):
+        self.assertEqual(transform_factorials("5!"), "fact(5)")
+        self.assertEqual(transform_factorials("(3+2)!"), "fact((3+2))")
+        self.assertEqual(transform_factorials("((3))!"), "fact(((3)))")
+        self.assertEqual(transform_factorials("(sin(90)+1)!"), "fact((sin(90)+1))")
+        self.assertEqual(transform_factorials("3! + 4!"), "fact(3) + fact(4)")
+
+    def test_implicit_multiplication(self):
+        self.assertEqual(add_implicit_multiplication("2pi"), "2*pi")
+        self.assertEqual(add_implicit_multiplication("2(5)"), "2*(5)")
+        self.assertEqual(add_implicit_multiplication("(2+3)(4+5)"), "(2+3)*(4+5)")
 
 
 class TestCLIGUIAgreement(unittest.TestCase):
@@ -106,85 +119,99 @@ class TestCLIGUIAgreement(unittest.TestCase):
         self.root.destroy()
 
     def test_arithmetic_agreement(self):
-        # Addition: CLI addition(15, 25) vs GUI "15 + 25"
         self.app.set_display_text("15 + 25")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.addition(15, 25))
 
-        # Subtraction: CLI subtraction(50, 18) vs GUI "50 - 18"
         self.app.set_display_text("50 - 18")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.subtraction(50, 18))
 
-        # Multiplication: CLI multiplication(7, 8) vs GUI "7 * 8"
         self.app.set_display_text("7 * 8")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.multiplication(7, 8))
 
-        # Division: CLI division(84, 4) vs GUI "84 / 4"
         self.app.set_display_text("84 / 4")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.division(84, 4))
 
-        # Modulus: CLI modulus(17, 5) vs GUI "17 % 5"
         self.app.set_display_text("17 % 5")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.modulus(17, 5))
 
-        # Power: CLI power(2, 5) vs GUI "2 ^ 5"
         self.app.set_display_text("2 ^ 5")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.power(2, 5))
 
     def test_scientific_agreement(self):
-        # Square Root: CLI square_root(144) vs GUI "sqrt(144)"
         self.app.set_display_text("sqrt(144)")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.square_root(144))
 
-        # Factorial: CLI factorial(5) vs GUI "5!"
         self.app.set_display_text("5!")
         self.app.evaluate()
         self.assertEqual(int(self.app.get_display_text()), sci_calc.factorial(5))
 
-        # Logarithm: CLI logarithm(100, 10) vs GUI "log(100)"
         self.app.set_display_text("log(100)")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.logarithm(100, 10))
 
-        # Natural Log: CLI natural_log(math.e) vs GUI "ln(e)"
         self.app.set_display_text("ln(e)")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.natural_log(math.e))
 
-        # Trigonometry: CLI sine(90) vs GUI "sin(90)"
         self.app.set_angle_mode("deg")
         self.app.set_display_text("sin(90)")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.sine(90, mode="deg"))
 
-        # Cosine: CLI cosine(0) vs GUI "cos(0)"
         self.app.set_display_text("cos(0)")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.cosine(0, mode="deg"))
 
-        # Tangent: CLI tangent(45) vs GUI "tan(45)"
         self.app.set_display_text("tan(45)")
         self.app.evaluate()
         self.assertEqual(float(self.app.get_display_text()), sci_calc.tangent(45, mode="deg"))
 
+    def test_gui_specific_features(self):
+        # x^2 button from default "0" should produce 0, not SyntaxError
+        self.app.all_clear()
+        self.app.add_symbol("^2")
+        self.app.evaluate()
+        self.assertEqual(self.app.get_display_text(), "0")
+
+        # Nested factorial
+        self.app.set_display_text("((3))!")
+        self.app.evaluate()
+        self.assertEqual(self.app.get_display_text(), "6")
+
+        # Implicit multiplication
+        self.app.set_display_text("2(5)")
+        self.app.evaluate()
+        self.assertEqual(self.app.get_display_text(), "10")
+
+        # Fresh calculation starting with digit replaces previous result
+        self.app.set_display_text("4 + 6")
+        self.app.evaluate()
+        self.assertEqual(self.app.get_display_text(), "10")
+        self.app.add_symbol("5")
+        self.assertEqual(self.app.get_display_text(), "5")
+
+        # Chaining operator retains previous result
+        self.app.set_display_text("4 + 6")
+        self.app.evaluate()
+        self.app.add_symbol("+")
+        self.assertEqual(self.app.get_display_text(), "10+")
+
     def test_error_handling_agreement(self):
-        # Division by zero
         self.app.set_display_text("10 / 0")
         self.app.evaluate()
         self.assertEqual(self.app.get_display_text(), sci_calc.division(10, 0))
 
-        # Negative square root
         self.app.set_display_text("sqrt(-9)")
         self.app.evaluate()
         self.assertEqual(self.app.get_display_text(), sci_calc.square_root(-9))
 
-        # Factorial of negative
         self.app.set_display_text("(-5)!")
         self.app.evaluate()
         self.assertEqual(self.app.get_display_text(), sci_calc.factorial(-5))

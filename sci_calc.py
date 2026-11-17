@@ -1,4 +1,5 @@
 import math
+import sys
 from typing import Union
 
 def addition(a: float, b: float) -> float:
@@ -26,6 +27,8 @@ def power(a: float, b: float) -> Union[float, str]:
         if isinstance(res, complex):
             return "Error: Complex result."
         return res
+    except ZeroDivisionError:
+        return "Error: Division by zero."
     except OverflowError:
         return "Error: Overflow."
     except ValueError:
@@ -59,7 +62,12 @@ def factorial(n: Union[int, float]) -> Union[int, str]:
     """Returns factorial of non-negative integer n."""
     if n < 0 or not float(n).is_integer():
         return "Error: Invalid input."
-    return math.factorial(int(n))   
+    if n > 1000:
+        return "Error: Overflow."
+    try:
+        return math.factorial(int(n))
+    except (OverflowError, ValueError):
+        return "Error: Overflow."
 
 def floor_division(a: float, b: float) -> Union[float, str]:
     """Returns floor division of a by b."""
@@ -138,10 +146,14 @@ def get_float_input(prompt: str) -> float:
     while True:
         try:
             return float(input(prompt))
+        except (KeyboardInterrupt, EOFError):
+            print("\nSession interrupted. Exiting.")
+            sys.exit(0)
         except ValueError:
             print("Error: Invalid number. Please try again.")
 
 def main():
+    current_mode = "deg"
     print("\nWelcome to the Advanced Calculator CLI!")
     print("Select operation:")
     print("+. Addition")
@@ -165,17 +177,28 @@ def main():
     print("asin. Arcsine")
     print("acos. Arccosine")
     print("atan. Arctangent")
+    print("mode. Toggle Angle Mode (Current: DEG)")
     print("exit. Exit")
 
     single_num_ops = {"sqrt", "exp", "ln"}
     trig_ops = {"sin", "cos", "tan", "sec", "cosec", "cot", "asin", "acos", "atan"}
-    two_num_ops = {"+", "-", "*", "/", "**", "%", "log", "//"}
+    two_num_ops = {"+", "-", "*", "/", "**", "%", "//"}
 
     while True:
-        choice = input("\nEnter choice: ").strip().lower()
+        try:
+            choice = input(f"\nEnter choice [{current_mode.upper()}]: ").strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            print("\nExiting the calculator. Goodbye!")
+            break
+
         if choice == "exit":
             print("Exiting the calculator. Goodbye!")
             break   
+
+        if choice == "mode":
+            current_mode = "rad" if current_mode == "deg" else "deg"
+            print(f"Angle mode set to: {current_mode.upper()}")
+            continue
 
         if choice in single_num_ops:
             num = get_float_input("Enter number: ")
@@ -190,26 +213,37 @@ def main():
             num = get_float_input("Enter non-negative integer: ")
             print("Result:", factorial(num))
 
+        elif choice == "log":
+            val = get_float_input("Enter value (number to calculate log of): ")
+            base = get_float_input("Enter base (default 10): ")
+            print("Result:", logarithm(val, base))
+
         elif choice in trig_ops:
-            val = get_float_input("Enter value/angle (in degrees for trig): ")
-            if choice == "sin":
-                print("Result:", sine(val))
-            elif choice == "cos":
-                print("Result:", cosine(val))
-            elif choice == "tan":
-                print("Result:", tangent(val))
-            elif choice == "sec":
-                print("Result:", sec(val))
-            elif choice == "cosec":
-                print("Result:", cosec(val))
-            elif choice == "cot":
-                print("Result:", cot(val))
-            elif choice == "asin":
-                print("Result:", arcsin(val))
-            elif choice == "acos":
-                print("Result:", arccos(val))
+            if choice in ["asin", "acos"]:
+                val = get_float_input("Enter ratio/value between -1 and 1: ")
             elif choice == "atan":
-                print("Result:", arctan(val))
+                val = get_float_input("Enter ratio/value: ")
+            else:
+                val = get_float_input(f"Enter angle in {current_mode.upper()}: ")
+
+            if choice == "sin":
+                print("Result:", sine(val, mode=current_mode))
+            elif choice == "cos":
+                print("Result:", cosine(val, mode=current_mode))
+            elif choice == "tan":
+                print("Result:", tangent(val, mode=current_mode))
+            elif choice == "sec":
+                print("Result:", sec(val, mode=current_mode))
+            elif choice == "cosec":
+                print("Result:", cosec(val, mode=current_mode))
+            elif choice == "cot":
+                print("Result:", cot(val, mode=current_mode))
+            elif choice == "asin":
+                print("Result:", arcsin(val, mode=current_mode))
+            elif choice == "acos":
+                print("Result:", arccos(val, mode=current_mode))
+            elif choice == "atan":
+                print("Result:", arctan(val, mode=current_mode))
 
         elif choice in two_num_ops:
             num1 = get_float_input("Enter first number: ")
@@ -226,8 +260,6 @@ def main():
                 print("Result:", power(num1, num2))
             elif choice == "%":
                 print("Result:", modulus(num1, num2))
-            elif choice == "log":
-                print("Result:", logarithm(num1, num2))
             elif choice == "//":
                 print("Result:", floor_division(num1, num2))
         else:
